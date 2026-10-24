@@ -1,0 +1,44 @@
+{
+  "name": "kp19-van-hoa-ho-chi-minh-so",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "audit:files": "node scripts/audit-project.mjs",
+    "test": "node --test tests/editorial.test.mjs tests/library.test.mjs tests/firestore-values.test.mjs tests/database-api.test.mjs tests/media-upload.test.mjs tests/admin.test.mjs",
+    "test:rules": "node scripts/test-rules.mjs",
+    "firebase:check": "node scripts/check-firebase.mjs",
+    "firebase:seed": "npx --yes --package=firebase-tools@15.32.1 node scripts/seed-firebase.mjs",
+    "firebase:setup-admin": "npx --yes --package=firebase-tools@15.32.1 node scripts/setup-firebase-admin.mjs",
+    "firebase:deploy:firestore": "npx firebase-tools deploy --only firestore:rules --project khonggianvanhoahcm-c5873",
+    "firebase:deploy:storage": "npx firebase-tools deploy --only storage --project khonggianvanhoahcm-c5873"
+  },
+  "dependencies": {
+    "firebase": "^12.19.0",
+    "firebase-admin": "^14.5.0",
+    "gsap": "^3.15.0",
+    "next": "^15.5.28",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/node": "^20",
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.27",
+    "typescript": "^5.4.0"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.5",
+    "postcss": "^8.5.29",
+    "gaxios": { "uuid": "^11.1.1" }
+  }
+}

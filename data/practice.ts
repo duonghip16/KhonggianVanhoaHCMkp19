@@ -1,0 +1,28 @@
+import { SOURCES } from './content'
+
+export const PRACTICE_VALUES = [
+  { id: 'ethics', title: 'Đạo đức', source: SOURCES.ethics },
+  { id: 'solidarity', title: 'Đoàn kết', source: SOURCES.solidarity },
+  { id: 'learning', title: 'Học tập', source: SOURCES.learning },
+  { id: 'community', title: 'Phục vụ cộng đồng', source: SOURCES.people },
+] as const
+export type PracticeValue = (typeof PRACTICE_VALUES)[number]['id']
+export type PracticeAction = { id: string; value: PracticeValue; title: string; context: string; steps: [string, string, string]; reflection: string }
+
+// Editorial suggestions, not quotations, historical accounts or reported local activities.
+export const PRACTICE_ACTIONS: PracticeAction[] = [
+  { id: 'giu-loi-hen', value: 'ethics', title: 'Giữ một lời hẹn', context: 'Bắt đầu từ một việc bạn đã nhận với gia đình hoặc người khác.', steps: ['Chọn một lời hẹn cụ thể và xác định khi nào làm.', 'Thực hiện đúng phần việc đã nhận; báo sớm nếu cần điều chỉnh.', 'Hỏi lại người liên quan và xem điều gì cần làm tốt hơn.'], reflection: 'Tôi đã làm điều đã hứa như thế nào? Lần sau cần chuẩn bị gì?' },
+  { id: 'su-dung-hop-ly', value: 'ethics', title: 'Sử dụng đồ dùng hợp lý', context: 'Trân trọng vật dụng đang có và giảm một việc gây lãng phí.', steps: ['Chọn một vật dụng hoặc thói quen thường ngày để xem lại.', 'Dùng đúng nhu cầu; giữ gìn hoặc tái sử dụng món đồ còn tốt.', 'Ghi lại thay đổi có thể duy trì trong ngày tiếp theo.'], reflection: 'Điều gì tôi có thể dùng hợp lý hơn mà vẫn đáp ứng nhu cầu?' },
+  { id: 'nhan-va-sua-loi', value: 'ethics', title: 'Nhận và sửa một thiếu sót', context: 'Một cuộc trao đổi thẳng thắn có thể giúp công việc tiến bộ.', steps: ['Chọn một thiếu sót của mình trong việc đã làm.', 'Trao đổi với người liên quan, nhận trách nhiệm và đề xuất cách sửa.', 'Thực hiện cách sửa và kiểm tra lại kết quả.'], reflection: 'Tôi học được gì từ việc nhận trách nhiệm và sửa thiếu sót?' },
+  { id: 'lang-nghe', value: 'solidarity', title: 'Lắng nghe một ý kiến khác', context: 'Tạo cơ hội hiểu nhau trước khi cùng đưa ra quyết định.', steps: ['Chọn một việc đang có ý kiến khác nhau.', 'Nghe hết điều người kia muốn nói và hỏi lại điều chưa rõ.', 'Tìm một điểm chung để thống nhất bước tiếp theo.'], reflection: 'Sau khi lắng nghe, tôi hiểu thêm điều gì về người khác?' },
+  { id: 'cung-lam', value: 'solidarity', title: 'Cùng làm một việc chung', context: 'Chọn việc vừa sức với gia đình, bạn bè hoặc hàng xóm.', steps: ['Hỏi xem ai muốn cùng tham gia và thống nhất một việc cụ thể.', 'Chia phần việc phù hợp với thời gian, khả năng của từng người.', 'Cùng xem kết quả và cảm ơn sự đóng góp của nhau.'], reflection: 'Cách phối hợp nào giúp mọi người tham gia thoải mái hơn?' },
+  { id: 'noi-chuyen-ton-trong', value: 'solidarity', title: 'Trao đổi với sự tôn trọng', context: 'Giữ lời nói bình tĩnh khi gặp một việc chưa thuận ý.', steps: ['Xác định vấn đề cần trao đổi, tránh quy kết về con người.', 'Nói rõ điều mình cần và lắng nghe nhu cầu của người kia.', 'Thống nhất cách xử lý phù hợp với cả hai bên.'], reflection: 'Điều gì giúp cuộc trao đổi bình tĩnh và rõ ràng hơn?' },
+  { id: 'doc-co-nguon', value: 'learning', title: 'Đọc một tư liệu có nguồn', context: 'Tìm hiểu một điều mới từ bộ sưu tập trên website.', steps: ['Chọn một bài đọc và xem cơ quan xuất bản, thời điểm, bối cảnh.', 'Ghi lại một điều đã hiểu bằng lời của mình.', 'Mở liên kết nguồn để đối chiếu và ghi câu hỏi cần tìm hiểu thêm.'], reflection: 'Điều gì đã rõ? Điều gì tôi cần kiểm tra hoặc đọc thêm?' },
+  { id: 'chia-se-kien-thuc', value: 'learning', title: 'Chia sẻ điều vừa học', context: 'Giúp kiến thức đến với người đang cần nó.', steps: ['Chọn một điều hữu ích đã hiểu và kiểm tra lại nguồn.', 'Giải thích ngắn, dễ hiểu cho một người phù hợp.', 'Lắng nghe câu hỏi, làm rõ điều chưa chắc và gửi nguồn tham khảo.'], reflection: 'Tôi cần giải thích điều gì rõ hơn khi chia sẻ lần sau?' },
+  { id: 'hoc-mot-ky-nang', value: 'learning', title: 'Thực hành một kỹ năng nhỏ', context: 'Chọn kỹ năng phù hợp với công việc hoặc đời sống của mình.', steps: ['Chọn một kỹ năng và tài liệu hướng dẫn đáng tin cậy.', 'Thử một bước đơn giản trong điều kiện phù hợp.', 'Xem lại kết quả và chọn phần cần luyện thêm.'], reflection: 'Bước nào tôi đã làm được? Bước nào cần tiếp tục học?' },
+  { id: 'hoi-truoc-khi-giup', value: 'community', title: 'Hỏi trước khi giúp', context: 'Sự hỗ trợ bắt đầu từ điều người khác thật sự cần.', steps: ['Hỏi một người xem họ có cần hỗ trợ việc gì không.', 'Thống nhất việc mình có thể giúp và tôn trọng cách họ lựa chọn.', 'Hỏi lại sau khi giúp để biết việc đã đáp ứng nhu cầu chưa.'], reflection: 'Tôi đã lắng nghe nhu cầu của người được giúp như thế nào?' },
+  { id: 'cham-khong-gian-chung', value: 'community', title: 'Chăm chút không gian chung', context: 'Làm một việc phù hợp để nơi mình sống gọn gàng hơn.', steps: ['Quan sát và chọn một việc nhỏ trong khả năng của mình.', 'Trao đổi với người liên quan nếu cần rồi thực hiện việc đã chọn.', 'Giữ gìn kết quả và nghĩ cách cùng duy trì về sau.'], reflection: 'Điều gì cần sự phối hợp của mọi người để duy trì lâu dài?' },
+  { id: 'ket-noi-ho-tro', value: 'community', title: 'Kết nối một sự hỗ trợ', context: 'Đôi khi giúp đúng người tìm đúng thông tin cũng là một việc hữu ích.', steps: ['Hỏi rõ nhu cầu và chỉ ghi lại thông tin cần thiết.', 'Tìm nguồn phù hợp, kiểm tra thông tin trước khi giới thiệu.', 'Hỏi xem thông tin đã hữu ích chưa và tôn trọng sự riêng tư.'], reflection: 'Nguồn hỗ trợ có phù hợp với nhu cầu thực tế không?' },
+]
+
+export const PRACTICE_RESOURCE_IDS = ['infographic-hoc-tap', 'infographic-dao-duc', 'sach-sua-doi-loi-lam-viec', 'video-doan-ket']

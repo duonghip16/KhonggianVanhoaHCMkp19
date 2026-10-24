@@ -1,0 +1,9 @@
+'use client'
+import { useState } from 'react'
+import type { EditorialRecord } from '@/lib/editorial'
+export default function ActivityTimeline({ activities }: { activities: EditorialRecord[] }) {
+  const [category, setCategory] = useState('Tất cả'), [year, setYear] = useState('Tất cả')
+  const categories = ['Tất cả', ...Array.from(new Set(activities.map(item => item.category)))], years = ['Tất cả', ...Array.from(new Set(activities.map(item => item.date.slice(0, 4)))).sort().reverse()]
+  const visible = activities.filter(item => (category === 'Tất cả' || item.category === category) && (year === 'Tất cả' || item.date.startsWith(year))).sort((a, b) => b.date.localeCompare(a.date))
+  return <section className="activity-section on-light"><p className="eyebrow">Dấu chân cộng đồng</p><h2>Từng việc làm.<br />Từng dấu mốc.</h2><div className="activity-filters"><div className="chips" role="group" aria-label="Chủ đề hoạt động">{categories.map(item => <button className="chip" key={item} aria-pressed={category === item} onClick={() => setCategory(item)}>{item}</button>)}</div><label>Năm<select value={year} onChange={event => setYear(event.target.value)}>{years.map(item => <option key={item}>{item}</option>)}</select></label></div><div aria-live="polite">{visible.length ? <ol className="activity-list">{visible.map(item => <li key={item.id}><time>{item.date}</time><div><span className="eyebrow">{item.category}</span><h3>{item.title}</h3><p>{item.text}</p><small>Nguồn: {item.source} · Xác minh: {item.verifiedBy}, {item.verifiedOn}</small></div></li>)}</ol> : <div className="editorial-empty"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#kp19-lotus" /></svg><h3>Những dấu mốc đang chờ được kể.</h3><p>Hoạt động của Khu phố 19 sẽ xuất hiện khi thông tin và tư liệu được xác minh, duyệt đăng.</p></div>}</div></section>
+}

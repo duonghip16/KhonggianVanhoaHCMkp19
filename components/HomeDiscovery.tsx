@@ -1,0 +1,7 @@
+import ReadingPopup from '@/components/ReadingPopup'
+import Link from 'next/link'
+import { LIBRARY } from '@/data/content'
+import type { EditorialRecord } from '@/lib/editorial'
+export default function HomeDiscovery({ stories }: { stories: EditorialRecord[] }) {
+  return <><section className="home-stories on-light"><p className="eyebrow">Những câu chuyện đẹp</p><h2>Điều bình dị.<br />Giá trị ở lại.</h2>{stories.length ? <div className="resource-links">{stories.slice(0, 3).map(item => <Link href={`/cau-chuyen/${encodeURIComponent(item.id!)}`} key={item.id}><small>{item.category} · {item.date}</small><h3>{item.title}</h3><p>{item.text.slice(0, 120)}…</p><span>↗</span></Link>)}</div> : <p className="lede">Những câu chuyện thật của Khu phố 19 đang chờ tư liệu xác minh. Bạn có thể góp một câu chuyện từ việc tốt mình đã làm.</p>}<div className="more"><Link className="btn dark" href="/cau-chuyen">Đọc câu chuyện ↗</Link><Link className="btn dark" href="/vuon-hoa-viec-tot">Gửi một việc tốt</Link></div></section><section className="home-library on-light"><p className="eyebrow">Thư viện số</p><h2>Một trang đọc.<br />Một điều để nghĩ.</h2><div className="resource-links">{LIBRARY.slice(0, 3).map(item => <ReadingPopup sourceUrl={item.url} key={item.id} className="reading-resource"><small>{item.source}</small><h3>{item.title}</h3><span>↗</span></ReadingPopup>)}</div><Link className="btn dark" href="/thu-vien">Khám phá thư viện số ↗</Link></section></>
+}

@@ -1,0 +1,3 @@
+export default function LotusSymbol() {
+  return <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true"><defs><symbol id="kp19-lotus" viewBox="0 0 100 100"><g fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"><path d="M50 14C62 34 62 62 50 82C38 62 38 34 50 14Z" /><path d="M50 82C34 76 20 58 22 36C34 40 46 56 50 82Z" /><path d="M50 82C66 76 80 58 78 36C66 40 54 56 50 82Z" /><path d="M50 84C30 86 12 72 8 54C24 54 42 64 50 84Z" /><path d="M50 84C70 86 88 72 92 54C76 54 58 64 50 84Z" /><path d="M30 92C42 88 58 88 70 92" /></g></symbol></defs></svg>
+}

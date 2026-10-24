@@ -1,0 +1,34 @@
+node_modules/
+.next/
+.next-dev/
+.env*
+!.env.example
+*.tsbuildinfo
+firebase-debug.log
+*-debug.log
+.qa/
+.DS_Store
+Thumbs.db
+npm-debug.log*
+*.pem
+*.key
+service-account*.json
+firebase-adminsdk*.json
+
+# Local tooling, hosting state and generated files
+.firebase/
+.vercel/
+coverage/
+playwright-report/
+test-results/
+*.log
+*.p12
+*.pfx
+
+# Original media archive; runtime images are in public/
+/assets/source-media.zip
+
+# Local editor / OS settings
+.idea/
+.vscode/
+Desktop.ini

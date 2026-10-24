@@ -1,0 +1,1 @@
+export default function RouteLoading() { return <div className="route-loading" role="status"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#kp19-lotus" /></svg><p>Đang mở chương tiếp theo…</p></div> }
