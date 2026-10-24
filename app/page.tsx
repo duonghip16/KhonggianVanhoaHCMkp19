@@ -47,7 +47,7 @@ export default async function Home() {
           <p className="eyebrow">Triển lãm số · Phường Tân Thới Hiệp</p>
           <h1 id="h1"><span className="hero-title-line"><em>Không gian Văn hóa</em></span><span><em>Hồ Chí Minh</em></span><span className="kp"><em> - KP19</em></span></h1>
           <p className="sub">Đi từ tư tưởng đến giá trị, từ giá trị đến những việc làm bình dị của một cộng đồng khu phố.</p>
-          <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a></div>
+          <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a><Link className="hero-secondary" href="/thu-vien">Khám phá thư viện số ↗</Link></div>
           <a className="scroll" href="#gia-tri" aria-label="Cuộn xuống để khám phá">KHÁM PHÁ<i /></a>
         </section>
 

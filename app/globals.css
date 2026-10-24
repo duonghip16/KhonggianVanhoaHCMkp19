@@ -203,7 +203,7 @@ footer b{color:var(--ivory-100)}
 .rv{opacity:1;transform:none}.hero h1 span>em{transform:none}.hero .eyebrow,.hero .sub,.hero .cta,#intro .t span{opacity:1}
 #intro .glow{display:none}}
 
-body{font-family:var(--font-bvp),system-ui,sans-serif}
+body{font-family:var(--font-bvp, system-ui),system-ui,sans-serif}
 
 /* ===== bổ sung: trang con, quiz, trước/sau, tường lời nhắn, thư viện ===== */
 .h2{font-size:clamp(32px,6vw,76px);margin:18px 0 24px;line-height:1.08;font-weight:800}
