@@ -45,7 +45,7 @@ export default async function Home() {
         <section className="hero grain" aria-labelledby="h1">
           <div className="hero-art" id="art" aria-hidden="true"><svg viewBox="0 0 100 100"><use href="#kp19-lotus" /></svg></div>
           <p className="eyebrow">Triển lãm số · Phường Tân Thới Hiệp</p>
-          <h1 id="h1"><span className="hero-title-line"><em>Không gian Văn hóa</em></span><span><em>Hồ Chí Minh</em></span><span className="kp"><em>Khu phố 19</em></span></h1>
+          <h1 id="h1"><span className="hero-title-line"><em>Không gian Văn hóa</em></span><span><em>Hồ Chí Minh</em></span><span className="kp"><em> - KP19</em></span></h1>
           <p className="sub">Đi từ tư tưởng đến giá trị, từ giá trị đến những việc làm bình dị của một cộng đồng khu phố.</p>
           <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a></div>
           <a className="scroll" href="#gia-tri" aria-label="Cuộn xuống để khám phá">KHÁM PHÁ<i /></a>

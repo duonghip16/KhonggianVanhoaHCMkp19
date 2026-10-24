@@ -58,7 +58,7 @@ export default function Effects() {
       <div className="glow" />
       <div>
         <svg viewBox="0 0 100 100"><use href="#kp19-lotus" /></svg>
-        <div className="t"><span>KHÔNG GIAN VĂN HÓA</span><span>HỒ CHÍ MINH</span><span>KHU PHỐ 19</span></div>
+        <div className="t"><span>KHÔNG GIAN VĂN HÓA</span><span>HỒ CHÍ MINH</span><span> - KP19</span></div>
       </div>
     </div>
   )

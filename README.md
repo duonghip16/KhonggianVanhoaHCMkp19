@@ -1,4 +1,4 @@
-# Không gian Văn hóa Hồ Chí Minh KP19
+# Không gian Văn hóa Hồ Chí Minh - KP19
 
 Website Next.js App Router, React, TypeScript; Firebase Auth/Firestore cho quản trị và nội dung, ImageKit cho upload ảnh, GSAP cho chuyển động.
 
