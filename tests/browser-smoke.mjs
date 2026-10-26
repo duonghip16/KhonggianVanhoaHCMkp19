@@ -57,10 +57,11 @@ try {
     }
     console.log(`PASS: ten public routes at ${width}px`)
   }
-  await command('Page.navigate', { url: base }); await settle()
   await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  await command('Page.navigate', { url: base }); await settle()
+  await evaluate('document.fonts.ready')
   await settle()
-  await evaluate('scrollTo(0, 0)')
+  await evaluate('scrollTo({top: 0, behavior: "instant"})')
   assert.equal(await evaluate('!!document.querySelector("#intro")'), false, 'Home has no blocking intro overlay')
   assert.equal(await evaluate('document.querySelector(".hero .cta").getBoundingClientRect().bottom <= innerHeight'), true, 'Home actions fit in the initial mobile viewport')
   await evaluate("document.querySelector('.mobile-menu summary').click()")

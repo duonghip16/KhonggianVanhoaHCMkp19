@@ -1,5 +1,19 @@
 # Kiểm định theo bản chốt KP19
 
+## Cập nhật nhịp bố cục điện thoại
+
+Đã thu gọn khoảng cách giữa các mục, bỏ chiều cao tối thiểu không cần thiết ở phần mở đầu, giảm khoảng trống trang trí, căn các đoạn giá trị vào đúng cột và chuyển ảnh mở đầu của ba trang tư liệu thành khối ảnh nhỏ kèm chú thích. Giữ nguyên nội dung và nguồn ảnh; các mục tự tăng chiều cao theo chữ, không cắt nội dung để đạt kích thước cố định. Chỉnh sửa bố cục chỉ áp dụng cho màn hình rộng tối đa 550px.
+
+| Phần mở đầu ở độ rộng 390px | Trước | Sau |
+|---|---:|---:|
+| Trang chủ | 717px | 577px |
+| Về Bác | 1.238px | 857px |
+| Học & làm theo Bác | 1.107px | 807px |
+| Thư viện số | 1.105px | 785px |
+| Giới thiệu dự án / Quyền riêng tư | 591px | 450px |
+
+Đo trên bản production local với viewport 390×844, giảm chuyển động và chờ tải trang/font. Số đoạn văn của cả 10 trang giữ nguyên trong phép đối chiếu. Dữ liệu ở `.qa/mobile-rhythm-before.json` và `.qa/mobile-rhythm-after.json`. Build/lint/TypeScript đạt; 10 trang không tràn ngang ở 7 độ rộng; các kiểm tra tương tác tiếp tục đạt (`.qa/mobile-rhythm-interactions.log`). Sửa thêm tương phản chữ của thông báo tải nội dung trong phần Lộ trình để thông báo luôn đọc được.
+
 ## Cập nhật nội dung và điều hướng theo góp ý
 
 Quyền riêng tư được viết lại bằng ngôn ngữ dành cho người tham gia, bỏ tên dịch vụ và thuật ngữ kỹ thuật. Giới thiệu dự án và Quyền riêng tư chuyển sang nhóm “Thông tin website” riêng ở footer. Menu điện thoại có 8 trang chính chia theo nhóm, biểu tượng, chỉ dấu trang hiện tại và nút Đóng; desktop có mục Cộng đồng mở danh sách con.

@@ -14,6 +14,7 @@
 .project-copy h2 { margin-bottom: 24px; }
 .project-copy p + p { margin-top: 16px; }
 .project-copy ul { padding-left: 24px; line-height: 1.9; }
+.flow .library-service-note { color: var(--charcoal); }
 .nav-item-icon { width: 21px; height: 21px; flex: 0 0 21px; }
 .nav-item-arrow { margin-left: auto; color: #68796b; font-size: 16px; }
 .desktop-community { position: relative; }
@@ -309,4 +310,60 @@ h1, h2, h3 { text-wrap: balance; }
 }
 @media (prefers-reduced-motion: reduce) {
   .nav-chevron { transition: none; }
+}
+
+/* Compact reading rhythm on phones; every section can grow with its content. */
+@media (max-width: 550px) {
+  main > section, .exhibition-content > section { padding-block: 48px; }
+  main > .hero { min-height: 0; padding-top: 128px; padding-bottom: 36px; }
+  .hero .sub { margin-top: 22px; line-height: 1.7; }
+  .hero .cta { margin-top: 24px; }
+  .hero .scroll { position: static; align-self: flex-start; flex-direction: row; align-items: center; gap: 12px; margin-top: 22px; }
+  .hero .scroll i { height: 20px; }
+  main > :is(.page-hero, .library-hero, .bac-hero, .learn-hero) { min-height: 0; padding-top: 120px; padding-bottom: 36px; }
+  .page-hero h1 { max-width: 18ch; margin-block: 20px; font-size: clamp(32px, 8.8vw, 42px); line-height: 1.2; }
+  .page-lede { font-size: 16px; line-height: 1.75; }
+  .hero-discover { margin-top: 24px; min-height: 44px; gap: 18px; font-size: 12px; }
+  .hero-discover span { font-size: 22px; }
+  main > section > h2, .exhibition-content > section > h2 { font-size: clamp(28px, 7.5vw, 34px); margin-block: 16px 20px; line-height: 1.25; }
+  .vgrid, .historical-layout, .flow .historical-layout, .thought-grid { margin-top: 24px; gap: 24px; }
+  .flow li { padding: 0 0 28px 42px; }
+  .flow li:last-child { padding-bottom: 0; }
+  .flow h3 { font-size: 26px; line-height: 1.3; }
+  .flow .library-service-note { margin-top: 0; margin-bottom: 24px; padding: 14px 16px; border-radius: 8px; background: #fff9ed0f; color: var(--ivory-200); font-size: 14px; line-height: 1.65; }
+  .v { padding-block: 20px; gap: 8px 12px; }
+  .v p { grid-column: 2; font-size: 16px; line-height: 1.7; }
+  .values .note { padding: 20px; }
+  main > .trans { padding-block: 40px; }
+  .trans .lotus { width: 44px; margin-bottom: 24px; }
+  .trans p { font-size: 22px; line-height: 1.45; margin-bottom: 20px; }
+  .trans p.last { font-size: 27px; margin-bottom: 0; }
+  .stats, .orgs, .bento, .verified-stats { margin-top: 32px; }
+  .split { gap: 24px; }
+  .og { margin-top: 28px; gap: 24px 16px; }
+  .garden-empty { margin-block: 24px; padding: 20px; }
+  .garden-empty svg { width: 64px; height: 64px; }
+  .garden-empty h3 { font-size: 24px; line-height: 1.35; }
+  .garden-empty p { margin-bottom: 20px; }
+  .field { margin-block: 24px; }
+  .gform { gap: 12px; }
+  .resource-links { margin-top: 24px; }
+  .exhibition-content > .project-copy { padding-block: 32px; }
+  .exhibition-content > .project-copy:first-child { padding-top: 40px; }
+  .project-copy h2 { margin-top: 0; font-size: 28px; }
+  .project-copy p { line-height: 1.75; }
+  .project-copy p + p { margin-top: 12px; }
+  .exhibition-content > .next-chapter { padding-block: 36px; }
+  .next-chapter > a { font-size: 30px; line-height: 1.3; margin-top: 18px; }
+
+  .about-bac .bac-hero, .learn-bac .learn-hero, main > .library-hero { gap: 24px; }
+  .about-bac .bac-hero h1, .learn-bac .learn-hero h1, .library-hero h1 { font-size: clamp(34px, 9.2vw, 42px); line-height: 1.2; margin-block: 18px 20px; }
+  .bac-hero-lede, .learn-hero-lede, .library-hero-lede { font-size: 16px; line-height: 1.75; }
+  .bac-hero-actions, .learn-hero-actions, .library-hero-actions { margin-top: 22px; gap: 10px 20px; }
+  .bac-hero-period, .learn-hero-caption, .library-hero-count { margin-top: 16px; }
+  .about-bac .bac-hero-portrait { max-width: none; width: 100%; }
+  .bac-hero-portrait .historical-photo, .learn-hero-photo .historical-photo, .library-hero-photo { display: grid; grid-template-columns: 112px minmax(0, 1fr); align-items: center; gap: 16px; width: 100%; }
+  .bac-hero-portrait .historical-photo img, .learn-hero-photo .historical-photo img, .library-hero-photo img { width: 112px; height: auto; max-height: none; object-fit: contain; border-radius: 8px; }
+  .bac-hero-portrait .historical-photo figcaption, .learn-hero-photo .historical-photo figcaption, .library-hero-photo figcaption { padding-top: 0; text-align: left; font-size: 12px; line-height: 1.65; }
+  .about-bac .milestone-panel { min-height: 0; }
 }
