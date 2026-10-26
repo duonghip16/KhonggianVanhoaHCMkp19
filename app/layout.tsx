@@ -10,6 +10,7 @@ import { siteUrl } from '@/lib/site-url'
 const bvp = Be_Vietnam_Pro({ subsets: ['vietnamese', 'latin'], weight: ['300', '400', '500', '700', '800'], variable: '--font-bvp', display: 'swap' })
 
 export const metadata: Metadata = {
+  ...(process.env.VERCEL_ENV === 'preview' ? { robots: { index: false, follow: false } } : {}),
   icons: {
     icon: { url: '/logos/LOGO_KP19-transparent.png', type: 'image/png' },
     shortcut: '/logos/LOGO_KP19-transparent.png',

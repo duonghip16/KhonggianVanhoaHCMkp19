@@ -15,6 +15,7 @@ service cloud.firestore {
         && d.text is string && d.text.size() <= 20000
         && d.name is string && d.name.size() <= 60
         && (!(d.status in ['verified', 'published']) || (evidence(d)
+          && (!(col in ['deeds', 'messages']) || d.consent == true)
           && (col != 'site_stats' || (d.value is number && d.value >= 0 && d.period is string && d.period.size() > 0))
           && (col != 'media' || (d.category is string && d.category.size() > 0 && d.url is string && d.url.size() > 0 && d.date is string && d.date.size() > 0 && d.photographer is string && d.photographer.size() > 0 && d.permission is string && d.permission.size() > 0))
           && (col != 'stories' || (d.text.size() > 0 && d.date is string && d.date.size() > 0))

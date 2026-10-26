@@ -19,10 +19,11 @@ import HomeDiscovery from '@/components/HomeDiscovery'
 import HistoricalPhoto from '@/components/HistoricalPhoto'
 import { HISTORICAL_IMAGES } from '@/data/historical-media'
 import { ORGANIZATIONS } from '@/data/organizations'
-import { COMMUNITY_STATS } from '@/data/community-stats'
+import VerifiedStats from '@/components/VerifiedStats'
+import { Suspense } from 'react'
 export const dynamic = 'force-dynamic'
+export const metadata = { title: { absolute: 'Không gian Văn hóa Hồ Chí Minh - KP19' }, description: 'Tìm hiểu tư tưởng, khám phá tư liệu và cùng thực hành những việc tốt tại Khu phố 19, phường Tân Thới Hiệp.', alternates: { canonical: '/' } }
 
-const STATS = [['activities', 'Hoạt động'], ['participants', 'Người tham gia'], ['deeds', 'Việc tốt được ghi nhận']]
 const FLOW = [
   ['Tư tưởng', 'Nền tảng để mỗi người soi chiếu cách sống và cách làm việc.'],
   ['Giá trị', 'Những chuẩn mực cụ thể, đủ gần để áp dụng trong đời sống hằng ngày.'],
@@ -30,14 +31,10 @@ const FLOW = [
   ['Khu phố 19 · Cộng đồng · Lan tỏa', 'Từng việc nhỏ của từng người nối lại thành đời sống chung ấm áp.'],
 ]
 
-export default async function Home() {
-  const { records: [media, stats, stories, questions, challenges], unavailable } = await loadPublishedCollections(['media', 'site_stats', 'stories', 'quiz_questions', 'daily_challenges'])
-  const quiz = questions.length ? questions.slice(0, 10).map(item => ({ q: item.title, o: item.options!.split('\n').map(option => option.trim()).filter(Boolean), a: item.correct!, why: item.text })) : QUIZ
-  const image = (slot: string) => media.find(item => item.category === slot)
+export default function Home() {
   return (
     <>
 
-      <Effects />
       <header className="nav" id="nav"><Brand />
         <Navigation /></header>
 
@@ -47,9 +44,23 @@ export default async function Home() {
           <p className="eyebrow">Triển lãm số · Phường Tân Thới Hiệp</p>
           <h1 id="h1"><span className="hero-title-line"><em>Không gian Văn hóa</em></span><span><em>Hồ Chí Minh</em></span><span className="kp"><em> - KP19</em></span></h1>
           <p className="sub">Đi từ tư tưởng đến giá trị, từ giá trị đến những việc làm bình dị của một cộng đồng khu phố.</p>
-          <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a><Link className="hero-secondary" href="/thu-vien">Khám phá thư viện số ↗</Link></div>
+          <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a><a className="hero-secondary" href="#khu-pho-19">Khám phá hoạt động KP19 ↗</a></div>
           <a className="scroll" href="#gia-tri" aria-label="Cuộn xuống để khám phá">KHÁM PHÁ<i /></a>
         </section>
+
+        <Suspense fallback={<section className="flow grain" aria-label="Nội dung tham quan đang tải"><p id="gia-tri" role="status">Đang mở nội dung tham quan…</p><p id="khu-pho-19">Hoạt động cộng đồng sẽ xuất hiện khi tải xong.</p></section>}><HomeContent /></Suspense>
+      </main>
+      <SiteFooter />
+    </>
+  )
+}
+
+async function HomeContent() {
+  const { records: [media, stats, stories, questions, challenges], unavailable } = await loadPublishedCollections(['media', 'site_stats', 'stories', 'quiz_questions', 'daily_challenges'])
+  const quiz = questions.length ? questions.slice(0, 10).map(item => ({ q: item.title, o: item.options!.split('\n').map(option => option.trim()).filter(Boolean), a: item.correct!, why: item.text })) : QUIZ
+  const image = (slot: string) => media.find(item => item.category === slot)
+  return <>
+        <Effects />
 
         <section className="flow grain" aria-labelledby="hf">
           {unavailable && <ContentServiceNote />}
@@ -67,7 +78,7 @@ export default async function Home() {
             <div className="vlist">
               {VALUES.map((v, i) => (
                 <div className="v rv" key={v.title}><b>{String(i + 1).padStart(2, '0')}</b><h3>{v.title}</h3>
-                  <p>{v.explanation}</p><p><strong>Ý nghĩa hôm nay:</strong> {v.today}</p><p><strong>Bạn có thể làm gì:</strong> {v.action}</p><small>Khu phố 19 thực hành: chờ câu chuyện địa phương đã xác minh.</small><p><ReadingPopup sourceUrl={v.source}>Đọc bài tư liệu →</ReadingPopup></p></div>
+                  <p>{v.explanation}</p><p><strong>Ý nghĩa hôm nay:</strong> {v.today}</p><p><strong>Bạn có thể làm gì:</strong> {v.action}</p><p><ReadingPopup sourceUrl={v.source}>Đọc bài tư liệu →</ReadingPopup></p></div>
               ))}
             </div>
             <aside className="note rv"><strong>Từ tư liệu đến thực hành</strong><p>Phần giải thích được biên tập từ các nguồn dẫn kèm. Các gợi ý hành động hôm nay là đề xuất thực hành của trang.</p><blockquote>“{QUOTE.text}”</blockquote><p>{QUOTE.context}</p><ReadingPopup sourceUrl={QUOTE.source}>Đọc bài tư liệu →</ReadingPopup></aside>
@@ -90,9 +101,7 @@ export default async function Home() {
               <p className="lede">Nơi các tổ chức đoàn thể cùng làm việc: Ban Công tác Mặt trận, Hội Cựu chiến binh, Hội Người cao tuổi, Hội Liên hiệp Phụ nữ và Đoàn Thanh niên.</p></div>
             {image('hero') ? <DocumentaryMedia item={image('hero')} priority /> : <figure className="kp19-community-photo"><Image src="/images/kp19/kp19.jpg" alt="Ảnh tổng hợp các hoạt động và sinh hoạt cộng đồng Khu phố 19" width={1200} height={1400} sizes="(max-width: 800px) 88vw, 42vw" /><figcaption>Hoạt động và sinh hoạt cộng đồng Khu phố 19</figcaption></figure>}
           </div>
-          <div className="stats" role="list" aria-label="Số liệu Khu phố 19">
-            {STATS.map(([key, label]) => { const stat = stats.find(item => item.category === key); return <div className="stat rv" role="listitem" key={key}><b>{stat ? stat.value.toLocaleString('vi-VN') : `${COMMUNITY_STATS[key]}+`}</b><span>{label}</span>{stat && <small>{`Kỳ: ${stat.period} · Nguồn: ${stat.source} · Xác minh: ${stat.verifiedBy}, ${stat.verifiedOn}`}</small>}</div> })}
-          </div>
+          <VerifiedStats records={stats} />
           <div className="orgs"><p className="eyebrow">Các tổ chức</p><h3 style={{ marginTop: 14 }}>Năm tổ chức, một khu phố.</h3>
             <div className="og">
               {ORGANIZATIONS.map(({ id: k, name: n, logo }) => (
@@ -119,8 +128,5 @@ export default async function Home() {
           <h2 id="hc">Giá trị đẹp bắt đầu từ việc nhỏ của bạn.</h2>
           <a className="btn" href="#vuon-hoa">Trồng một bông hoa <i>→</i></a>
         </section>
-      </main>
-      <SiteFooter />
     </>
-  )
 }

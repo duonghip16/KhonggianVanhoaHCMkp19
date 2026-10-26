@@ -5,16 +5,87 @@ import ts from 'typescript'
 const compile = source => ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText
 const moduleUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 const editorial = moduleUrl(compile(await readFile(new URL('../lib/editorial.ts', import.meta.url), 'utf8')))
+const diagnostics = moduleUrl(compile(await readFile(new URL('../lib/server-diagnostics.ts', import.meta.url), 'utf8')))
+const { reportServiceFailure } = await import(diagnostics)
+const { submit, fetchPublished } = await import(moduleUrl(compile(await readFile(new URL('../lib/submit.ts', import.meta.url), 'utf8')).replace("'./editorial'", JSON.stringify(editorial))))
 const contributions = moduleUrl(compile(await readFile(new URL('../lib/contributions.ts', import.meta.url), 'utf8')).replace("'./editorial'", JSON.stringify(editorial)))
 const response = moduleUrl('export const NextResponse = {json: (data, init) => new Response(JSON.stringify(data), {...init, headers: {"Content-Type":"application/json",...init?.headers}})}')
 const limits = moduleUrl(compile(await readFile(new URL('../lib/submission-limit.ts', import.meta.url), 'utf8')))
 const { reserveSubmission, submissionKey } = await import(limits)
-const { POST } = await import(moduleUrl(compile(await readFile(new URL('../app/api/contributions/route.ts', import.meta.url), 'utf8')).replace("'next/server'", JSON.stringify(response)).replace("'@/lib/contributions'", JSON.stringify(contributions)).replace("'@/lib/submission-limit'", JSON.stringify(limits))))
+const { POST } = await import(moduleUrl(compile(await readFile(new URL('../app/api/contributions/route.ts', import.meta.url), 'utf8')).replace("'next/server'", JSON.stringify(response)).replace("'@/lib/contributions'", JSON.stringify(contributions)).replace("'@/lib/submission-limit'", JSON.stringify(limits)).replace("'@/lib/server-diagnostics'", JSON.stringify(diagnostics))))
 const values = moduleUrl(compile(await readFile(new URL('../lib/firestore-values.ts', import.meta.url), 'utf8')))
 const react = moduleUrl('export const cache = fn => fn')
 const { publishedRecords, loadPublishedCollections } = await import(moduleUrl(compile(await readFile(new URL('../lib/public-content.ts', import.meta.url), 'utf8')).replace("import 'server-only';", '').replace("'react'", JSON.stringify(react)).replace("'./editorial'", JSON.stringify(editorial)).replace("'./firestore-values'", JSON.stringify(values))))
 let requestNumber = 0
+test('community forms use the server configuration and distinguish missing configuration from failures', async () => {
+  const originalFetch = globalThis.fetch
+  const originalProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  try {
+    const data = { text: 'Một lời nhắn', name: '' }
+    globalThis.fetch = async () => new Response(JSON.stringify({ saved: true }), { status: 201 })
+    assert.equal(await submit('messages', data), 'saved')
+    assert.equal(await submit('deeds', { ...data, title: 'Việc tốt', date: '2026-10-26' }), 'saved')
+    globalThis.fetch = async () => new Response(JSON.stringify([{ id: 'published-message', ...data }]))
+    assert.equal((await fetchPublished('messages'))[0].id, 'published-message')
+    globalThis.fetch = async () => new Response(JSON.stringify({ code: 'FIREBASE_NOT_CONFIGURED' }), { status: 503 })
+    assert.equal(await submit('messages', data), 'local')
+    globalThis.fetch = async () => new Response('{}', { status: 503 })
+    assert.equal(await submit('messages', data), 'error')
+    const missing = await POST(request({ type: 'messages', ...data, consent: true }))
+    assert.equal(missing.status, 503)
+    assert.equal((await missing.json()).code, 'FIREBASE_NOT_CONFIGURED')
+  } finally {
+    globalThis.fetch = originalFetch
+    if (originalProject === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = originalProject
+  }
+})
 const request = (body, ip = `fixture-${++requestNumber}`) => new Request('http://localhost/api/contributions', { method: 'POST', headers: { 'Content-Type': 'application/json', origin: 'http://localhost', 'x-test-ip': ip }, body: JSON.stringify(body) })
+
+test('diagnostics log only a fixed code, generated request ID and upstream status', () => {
+  const original = console.error, entries = []
+  console.error = entry => entries.push(JSON.parse(entry))
+  try {
+    const requestId = reportServiceFailure('CONTRIBUTION_WRITE_DENIED', 403)
+    assert.match(requestId, /^[0-9a-f-]{36}$/)
+    assert.deepEqual(entries, [{ event: 'CONTRIBUTION_WRITE_DENIED', requestId, upstreamStatus: 403 }])
+  } finally { console.error = original }
+})
+
+test('community loading handles malformed responses and network failures safely', async () => {
+  const original = globalThis.fetch
+  try {
+    for (const invalid of [{ error: 'upstream failure' }, [null], [{ id: 'bad', text: 42, name: '' }], [{ id: 'bad', text: 'Fixture', name: '', date: '2026-02-31' }]]) {
+      globalThis.fetch = async () => Response.json(invalid)
+      assert.equal(await fetchPublished('deeds'), null)
+    }
+    globalThis.fetch = async () => { throw new Error('Offline') }
+    assert.equal(await submit('messages', { text: 'Preserve this draft', name: '' }), 'error')
+    assert.equal(await fetchPublished('messages'), null)
+    globalThis.fetch = async () => Response.json([{ id: 'legacy', text: 'Fixture', name: '' }])
+    assert.deepEqual(await fetchPublished('messages'), [{ id: 'legacy', text: 'Fixture', name: '', title: '', date: '' }])
+  } finally { globalThis.fetch = original }
+})
+
+test('Vercel rate limits use its proxy header only when running on Vercel', () => {
+  const originalVercel = process.env.VERCEL, originalHeader = process.env.CONTRIBUTION_IP_HEADER
+  delete process.env.CONTRIBUTION_IP_HEADER
+  const visitor = (ip, forged = 'forged') => new Request('https://example.test', { headers: { 'x-vercel-forwarded-for': ip, 'x-forwarded-for': forged } })
+  try {
+    delete process.env.VERCEL
+    assert.equal(submissionKey(visitor('192.0.2.1')), submissionKey(visitor('192.0.2.2')))
+    process.env.VERCEL = '1'
+    assert.notEqual(submissionKey(visitor('192.0.2.1')), submissionKey(visitor('192.0.2.2')))
+    assert.equal(submissionKey(visitor('192.0.2.1', 'fake-a')), submissionKey(visitor('192.0.2.1', 'fake-b')))
+    assert.equal(submissionKey(new Request('https://example.test')), submissionKey(new Request('https://example.test')))
+  } finally {
+    if (originalVercel === undefined) delete process.env.VERCEL
+    else process.env.VERCEL = originalVercel
+    if (originalHeader === undefined) delete process.env.CONTRIBUTION_IP_HEADER
+    else process.env.CONTRIBUTION_IP_HEADER = originalHeader
+  }
+})
 
 test('submission limits share a cooldown across forms, cap bursts and recover after the window', () => {
   const key = 'deterministic-rate-test'
@@ -75,6 +146,25 @@ test('contribution endpoint validates before writing and reports only confirmed 
     globalThis.fetch = originalFetch
     if (originalHeader === undefined) delete process.env.CONTRIBUTION_IP_HEADER
     else process.env.CONTRIBUTION_IP_HEADER = originalHeader
+    if (originalProject === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = originalProject
+  }
+})
+
+test('public community queries hide published records without explicit consent', async () => {
+  const originalFetch = globalThis.fetch, originalProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'demo-local-tests'
+  try {
+    const fields = { status: { stringValue: 'published' }, text: { stringValue: 'Fixture' }, name: { stringValue: '' } }
+    globalThis.fetch = async () => new Response(JSON.stringify([
+      { document: { name: 'messages/missing', fields } },
+      { document: { name: 'messages/refused', fields: { ...fields, consent: { booleanValue: false } } } },
+      { document: { name: 'messages/accepted', fields: { ...fields, consent: { booleanValue: true } } } },
+    ]))
+    assert.deepEqual((await publishedRecords('messages')).map(item => item.id), ['accepted'])
+    assert.deepEqual((await publishedRecords('deeds')).map(item => item.id), ['accepted'])
+  } finally {
+    globalThis.fetch = originalFetch
     if (originalProject === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = originalProject
   }

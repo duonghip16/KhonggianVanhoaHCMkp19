@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import { fetchPublished, submit } from '@/lib/submit'
 import { displayDate } from '@/lib/date'
 
-type Deed = { t: string; n: string; title: string; date: string } | null
+type Deed = { id: string; t: string; n: string; title: string; date: string }
 const sizes = [64, 84, 72, 96, 68, 80, 76, 88]
 
 export default function Garden() {
-  const [fl, setFl] = useState<Deed[]>(Array(8).fill(null))
+  const [fl, setFl] = useState<Deed[]>([])
+  const [attempt, setAttempt] = useState(0)
   const [sel, setSel] = useState<number | null>(null)
   const [ok, setOk] = useState(0)
   const [name, setName] = useState('')
@@ -19,7 +20,7 @@ export default function Garden() {
   const [res, setRes] = useState<'' | 'saved' | 'local' | 'limited' | 'error'>('')
   const [sending, setSending] = useState(false)
   const [loadError, setLoadError] = useState(false), [loading, setLoading] = useState(true)
-  useEffect(() => { let active = true; fetchPublished('deeds').then(d => { if (!active) return; setLoading(false); if (d === null) setLoadError(true); else if (d.length) setFl(Array.from({ length: Math.max(8, d.length) }, (_, i) => d[i] ? { t: d[i].text, n: d[i].name, title: d[i].title, date: d[i].date } : null)) }); return () => { active = false } }, [])
+  useEffect(() => { let active = true; setLoading(true); setLoadError(false); fetchPublished('deeds').then(d => { if (!active) return; setLoading(false); if (d === null) setLoadError(true); else setFl(d.map(item => ({ id: item.id, t: item.text, n: item.name, title: item.title, date: item.date }))) }); return () => { active = false } }, [attempt])
   const close = () => { const i = sel; setSel(null); if (i !== null) btns.current[i]?.focus() }
   useEffect(() => {
     const element = dialog.current
@@ -45,20 +46,21 @@ export default function Garden() {
       <p className="eyebrow">Tương tác</p>
       <h2 id="hg">Vườn hoa việc tốt</h2>
       <p className="gq">Mỗi việc tốt – Một bông hoa đẹp.</p>
-      {loading && <p role="status">Đang mở khu vườn…</p>}{loadError && <p role="alert">Chưa tải được các việc tốt. Vui lòng thử tải lại trang.</p>}
-      <ul className="field" aria-label="Vườn hoa việc tốt">
+      {loading && <p role="status">Đang mở khu vườn…</p>}{loadError && <div role="alert"><p>Chưa tải được các việc tốt.</p><button className="btn" type="button" onClick={() => setAttempt(value => value + 1)}>Thử tải lại</button></div>}
+      {!loading && !loadError && !fl.length && <div className="garden-empty"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#kp19-lotus" /></svg><h3>Một việc nhỏ, khởi đầu một khu vườn.</h3><p>Chưa có việc tốt nào được công bố. Chia sẻ việc bạn đã làm; mỗi bài sẽ được xem xét trước khi xuất hiện tại đây.</p><a className="btn" href="#garden-form" onClick={event => { event.preventDefault(); document.getElementById('gtitle')?.focus() }}>Gửi việc tốt đầu tiên <span aria-hidden="true">→</span></a></div>}
+      {fl.length > 0 && <ul className="field" aria-label="Vườn hoa việc tốt">
         {fl.map((f, i) => (
-          <li key={i}><button type="button" ref={el => { btns.current[i] = el }}
+          <li key={f.id}><button type="button" ref={el => { btns.current[i] = el }}
             className={'fl' + (f ? ' full' : '')}
             style={{ ['--s' as string]: sizes[i % sizes.length] + 'px' }}
             aria-label={f ? `Hoa việc tốt của ${f.n || 'một người'}` : `Ô hoa số ${i + 1}: chưa có việc tốt`}
             onClick={() => setSel(i)}>
             <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#kp19-lotus" /></svg>
-            <span>{f ? f.n || 'Một việc tốt' : 'Chưa có việc tốt'}</span>
+            <span>{f.title || 'Một việc tốt'}</span><small>{f.n || 'Một người bạn'}{f.date && ` · ${displayDate(f.date)}`}</small>
           </button></li>
         ))}
-      </ul>
-      <form className="gform" onSubmit={send}>
+      </ul>}
+      <form className="gform" id="garden-form" onSubmit={send} aria-busy={sending}>
         <div><label htmlFor="gn">Tên của bạn (có thể bỏ trống)</label><input id="gn" maxLength={60} autoComplete="name" value={name} onChange={e => setName(e.target.value)} /></div>
         <div><label htmlFor="gtitle">Tên việc tốt</label><input id="gtitle" required maxLength={200} value={title} onChange={event => setTitle(event.target.value)} /></div>
         <div><label htmlFor="gdate">Ngày thực hiện</label><input id="gdate" type="date" required value={date} onChange={event => setDate(event.target.value)} /></div>

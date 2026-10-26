@@ -20,7 +20,7 @@ export const publishedRecords = cache(async (col: ManagedCollection): Promise<Ed
       if (data.status !== 'published') return []
       if (['title', 'text', 'name', 'category', 'source', 'verifiedBy', 'verifiedOn', 'date', 'url', 'photographer', 'permission', 'period', 'type', 'options', 'curatedId'].some(key => key in data && typeof data[key] !== 'string')) return []
       const record = { title: '', text: '', name: '', category: '', source: '', verifiedBy: '', verifiedOn: '', date: '', url: '', photographer: '', permission: '', period: '', value: 0, type: '', ...data, id: document.name.split('/').pop() } as EditorialRecord
-      if (col === 'deeds' || col === 'messages') return record.text.trim() && record.text.length <= 400 && record.name.length <= 60 ? [record] : []
+      if (col === 'deeds' || col === 'messages') return record.consent === true && record.text.trim() && record.text.length <= 400 && record.name.length <= 60 ? [record] : []
       return editorialErrors(col, record).length ? [] : [record]
     }).sort((a, b) => b.verifiedOn.localeCompare(a.verifiedOn) || (b.id || '').localeCompare(a.id || ''))
   } catch { console.error(`Public content ${col}: unavailable`); throw new Error('Chưa tải được nội dung. Vui lòng thử lại sau.') }

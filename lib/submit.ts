@@ -6,13 +6,16 @@ export async function submit(col: Col, data: { text: string; name: string; title
   if (!data.text.trim() || data.text.length > 400 || data.name.length > 60) return 'error'
   if (data.title !== undefined && (!data.title.trim() || data.title.length > 200)) return 'error'
   if (data.date !== undefined && !validDate(data.date)) return 'error'
-  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !process.env.NEXT_PUBLIC_FIREBASE_API_KEY || !process.env.NEXT_PUBLIC_FIREBASE_APP_ID || !process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) return 'local'
   try {
     const response = await fetch('/api/contributions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...data, type: col, consent: true }), signal: AbortSignal.timeout(12000),
     })
     if (response.status === 429) return 'limited'
+    if (response.status === 503) {
+      const result = await response.json()
+      return result.code === 'FIREBASE_NOT_CONFIGURED' ? 'local' : 'error'
+    }
     if (!response.ok) return 'error'
     const result = await response.json()
     return result.saved === true ? 'saved' : 'error'
@@ -21,9 +24,18 @@ export async function submit(col: Col, data: { text: string; name: string; title
 /** Chỉ đọc nội dung đã được quản trị viên đặt status = "published". */
 export async function fetchPublished(col: Col): Promise<PublishedContribution[] | null> {
   try {
-    if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) return []
     const response = await fetch(`/api/community?type=${col}`, { signal: AbortSignal.timeout(10000) })
     if (!response.ok) return null
-    return await response.json() as PublishedContribution[]
+    const result: unknown = await response.json()
+    if (!Array.isArray(result)) return null
+    const records: PublishedContribution[] = []
+    for (const item of result) {
+      if (!item || typeof item !== 'object' || typeof item.id !== 'string' || typeof item.text !== 'string' || typeof item.name !== 'string') return null
+      if (!item.text.trim() || item.text.length > 400 || item.name.length > 60) return null
+      const title = item.title ?? '', date = item.date ?? ''
+      if (typeof title !== 'string' || title.length > 200 || typeof date !== 'string' || (date && !validDate(date))) return null
+      records.push({ id: item.id, text: item.text, name: item.name, title, date })
+    }
+    return records
   } catch { return null }
 }

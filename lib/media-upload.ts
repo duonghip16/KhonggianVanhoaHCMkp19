@@ -1,8 +1,10 @@
+import { reportServiceFailure } from './server-diagnostics'
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const MAX_REQUEST_SIZE = MAX_FILE_SIZE + 64 * 1024
 const EXTENSIONS: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/avif': 'avif' }
 type UploadConfig = { privateKey?: string; urlEndpoint?: string }
-const reply = (status: number, error: string) => Response.json({ error }, { status, headers: { 'Cache-Control': 'no-store' } })
+const reply = (status: number, error: string) => Response.json({ error, ...(status >= 500 ? { code: 'MEDIA_UPLOAD_UNAVAILABLE', requestId: reportServiceFailure('MEDIA_UPLOAD_UNAVAILABLE') } : {}) }, { status, headers: { 'Cache-Control': 'no-store' } })
 
 function matchesImage(bytes: Buffer, type: string) {
   if (type === 'image/jpeg') return bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255

@@ -9,6 +9,7 @@
     "lint": "eslint . --ext .ts,.tsx",
     "typecheck": "tsc --noEmit",
     "audit:files": "node scripts/audit-project.mjs",
+    "audit:links": "node scripts/check-source-links.mjs",
     "test": "node --test tests/editorial.test.mjs tests/library.test.mjs tests/firestore-values.test.mjs tests/database-api.test.mjs tests/media-upload.test.mjs tests/admin.test.mjs",
     "test:rules": "node scripts/test-rules.mjs",
     "firebase:check": "node scripts/check-firebase.mjs",

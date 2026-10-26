@@ -18,7 +18,7 @@ export function SiteFooter() {
   ] as const
   const participate = [
     ['/cau-chuyen', 'Những câu chuyện đẹp'], ['/vuon-hoa-viec-tot', 'Vườn hoa việc tốt'],
-    ['/tuong-tac', 'Tương tác'],
+    ['/tuong-tac', 'Tương tác'], ['/gioi-thieu', 'Giới thiệu dự án'], ['/quyen-rieng-tu', 'Quyền riêng tư'],
   ] as const
   return <footer className="site-footer"><div className="footer-inner">
     <div className="footer-invitation">
@@ -34,6 +34,6 @@ export function SiteFooter() {
   </div></footer>
 }
 export function Brand() {
-  return <Link href="/" className="brand" aria-label={SITE_NAME}><Image src="/logos/LOGO_KP19-transparent.png" width={44} height={44} alt="Logo Khu phố 19" /><b className="brand-wordmark"><span className="brand-overline">Không gian Văn hóa</span><span className="brand-title">Hồ Chí Minh <span className="brand-district">- KP19</span></span></b></Link>
+  return <Link href="/" className="brand"><Image src="/logos/LOGO_KP19-transparent.png" width={44} height={44} alt="" /><b className="brand-wordmark"><span className="brand-overline">Không gian Văn hóa</span><span className="brand-title">Hồ Chí Minh <span className="brand-district">- KP19</span></span></b></Link>
 }
 export function StatusTag({ s }: { s: Status }) { return <span className={'st st-' + s}>{STATUS_LABEL[s]}</span> }

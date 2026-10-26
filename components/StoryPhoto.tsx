@@ -7,5 +7,5 @@ export default function StoryPhoto({ story, media, priority = false }: { story: 
   const photo = media.find(item => item.category === `story:${story.id}`)
   if (photo || !story.localImage) return <DocumentaryMedia item={photo} priority={priority} />
   const image = story.localImage
-  return <figure className="story-local-photo"><Image src={image.src} width={image.width} height={image.height} alt={image.alt} sizes="(max-width: 800px) 90vw, 60vw" priority={priority} style={{ aspectRatio: `${image.width} / ${image.height}` }} /></figure>
+  return <figure className="story-local-photo"><Image src={encodeURI(image.src)} width={image.width} height={image.height} alt={image.alt} sizes="(max-width: 800px) 90vw, 60vw" priority={priority} style={{ aspectRatio: `${image.width} / ${image.height}` }} /></figure>
 }

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import ts from 'typescript'
 const source = ts.transpileModule(await readFile(new URL('../lib/media-upload.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText
-const { handleMediaUpload } = await import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`)
+const diagnostics = `data:text/javascript;base64,${Buffer.from(ts.transpileModule(await readFile(new URL('../lib/server-diagnostics.ts', import.meta.url), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText).toString('base64')}`
+const { handleMediaUpload } = await import(`data:text/javascript;base64,${Buffer.from(source.replace("'./server-diagnostics'", JSON.stringify(diagnostics))).toString('base64')}`)
 const config = { privateKey: 'test-secret', urlEndpoint: 'https://ik.imagekit.io/test-account' }
 const png = Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]), Buffer.alloc(20)])
 function request(bytes = png, type = 'image/png', token = 'valid-token') {

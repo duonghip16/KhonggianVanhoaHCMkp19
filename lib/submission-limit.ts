@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 const visitors = new Map<string, number[]>()
 export function submissionKey(request: Request) {
   // Only hosting platforms that overwrite this header should set CONTRIBUTION_IP_HEADER.
-  const header = process.env.CONTRIBUTION_IP_HEADER
+  const header = process.env.CONTRIBUTION_IP_HEADER || (process.env.VERCEL === '1' ? 'x-vercel-forwarded-for' : undefined)
   const address = header ? request.headers.get(header)?.split(',')[0].trim() : undefined
   return createHash('sha256').update(address || 'shared-unidentified-visitors').digest('hex')
 }

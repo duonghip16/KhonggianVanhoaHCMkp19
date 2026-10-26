@@ -9,8 +9,7 @@ for (let attempt = 0; attempt < 30; attempt++) {
   try { targets = await (await fetch('http://127.0.0.1:9223/json')).json(); if (targets.some(item => item.type === 'page')) break } catch {}
   await delay(350)
 }
-const target = targets.find(item => item.type === 'page' && item.url.startsWith(base))
-  || targets.find(item => item.type === 'page' && !item.url.startsWith('edge://'))
+const target = await (await fetch('http://127.0.0.1:9223/json/new?about:blank', { method: 'PUT' })).json()
 assert.ok(target)
 const socket = new WebSocket(target.webSocketDebuggerUrl)
 await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject })
@@ -42,10 +41,11 @@ await mkdir('.qa', { recursive: true })
 await mkdir(downloadRoot, { recursive: true })
 try {
   await command('Page.enable'); await command('Runtime.enable')
+  await command('Network.enable')
   await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  for (const width of process.env.QA_INTERACTIONS_ONLY ? [] : [360, 390, 430, 768, 1024, 1280, 1440]) {
+  for (const width of process.env.QA_INTERACTIONS_ONLY ? [] : [320, 375, 390, 430, 768, 1024, 1440]) {
     await command('Emulation.setDeviceMetricsOverride', { width, height: 844, deviceScaleFactor: 1, mobile: width < 500 })
-    for (const route of ['/', '/ve-bac', '/hoc-va-lam-theo-bac', '/khu-pho-19', '/cau-chuyen', '/vuon-hoa-viec-tot', '/thu-vien', '/tuong-tac']) {
+    for (const route of ['/', '/ve-bac', '/hoc-va-lam-theo-bac', '/khu-pho-19', '/cau-chuyen', '/vuon-hoa-viec-tot', '/thu-vien', '/tuong-tac', '/gioi-thieu', '/quyen-rieng-tu']) {
       await command('Page.navigate', { url: base + route }); await settle()
       assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true, `Overflow at ${width}px on ${route}`)
       assert.equal(await evaluate('document.querySelectorAll("h1").length'), 1, `H1 count on ${route}`)
@@ -55,10 +55,14 @@ try {
         await writeFile(`.qa/${route === '/' ? 'home' : route.slice(1)}-${width}.png`, Buffer.from(screenshot.data, 'base64'))
       }
     }
-    console.log(`PASS: eight public routes at ${width}px`)
+    console.log(`PASS: ten public routes at ${width}px`)
   }
   await command('Page.navigate', { url: base }); await settle()
   await command('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+  await settle()
+  await evaluate('scrollTo(0, 0)')
+  assert.equal(await evaluate('!!document.querySelector("#intro")'), false, 'Home has no blocking intro overlay')
+  assert.equal(await evaluate('document.querySelector(".hero .cta").getBoundingClientRect().bottom <= innerHeight'), true, 'Home actions fit in the initial mobile viewport')
   await evaluate("document.querySelector('.mobile-menu summary').click()")
   assert.equal(await evaluate("document.querySelector('.mobile-menu').open"), true)
   assert.equal(await evaluate("getComputedStyle(document.querySelector('.mobile-menu nav ul')).display"), 'flex')
@@ -91,12 +95,20 @@ try {
   assert.match(planHtml, /type="checkbox" checked/)
   await command('Page.navigate', { url: base + '/cau-chuyen' }); await settle()
   assert.ok(await evaluate('document.querySelectorAll(".story").length >= 8'))
+  assert.equal(await evaluate(`Promise.race([Promise.all(Array.from(document.querySelectorAll('.story-local-photo img')).map(img => { img.loading = 'eager'; return img.decode().then(() => true, () => false) })).then(results => results.length > 0 && results.every(Boolean)), new Promise(resolve => setTimeout(() => resolve(false), 15000))])`), true, 'Local story photos, including Vietnamese filenames, load successfully')
   await evaluate("document.querySelector('.story-photo-link').click()"); await settle()
   assert.equal(await evaluate('!!document.querySelector(".story-popup[open]")'), true)
   assert.equal(await evaluate('location.pathname'), '/cau-chuyen')
   await evaluate("document.querySelector('[aria-label=\"Đóng câu chuyện\"]').click()"); await settle()
   assert.equal(await evaluate('!!document.querySelector(".story-popup[open]")'), false)
+  // Browser-only fixtures: no contributions are written to Firebase.
+  const fixture = await command('Page.addScriptToEvaluateOnNewDocument', { source: `const actualFetch = window.fetch; window.fetch = (input, init) => String(input).startsWith('/api/community?type=deeds') ? Promise.resolve(new Response(JSON.stringify(Array.from({length:sessionStorage.getItem('qa-deed') === 'many' ? 120 : sessionStorage.getItem('qa-deed') ? 1 : 0},(_,i)=>({id:'qa-only-'+i,title:'Việc tốt kiểm thử '+i,date:'2026-10-26',name:'',text:'Dữ liệu chỉ trong trình duyệt'}))), {headers:{'Content-Type':'application/json'}})) : actualFetch(input, init);` })
   await command('Page.navigate', { url: base + '/vuon-hoa-viec-tot' }); await settle()
+  assert.equal(await evaluate('document.querySelectorAll(".fl").length'), 0)
+  await evaluate("document.querySelector('.garden-empty a').click()")
+  assert.equal(await evaluate('document.activeElement.id'), 'gtitle')
+  await evaluate("sessionStorage.setItem('qa-deed','1')")
+  await command('Page.reload'); await settle()
   await evaluate("document.querySelector('.fl').click()")
   await settle()
   assert.equal(await evaluate("document.querySelector('.deed-dialog').open"), true)
@@ -104,6 +116,21 @@ try {
   await command('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
   await settle()
   assert.equal(await evaluate("document.querySelector('.deed-dialog').open"), false)
+  await evaluate("sessionStorage.setItem('qa-deed','many')")
+  await command('Page.reload'); await settle()
+  assert.equal(await evaluate('document.querySelectorAll(".fl").length'), 120)
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true, 'Large garden stays within the mobile viewport')
+  await evaluate(`window.fetch = () => Promise.reject(new TypeError('QA offline')); for (const [id,value] of [['gtitle','Việc tốt kiểm thử'],['gdate','2026-10-26'],['gt','Nội dung cần giữ lại']]) { const field=document.getElementById(id); const prototype=field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(prototype,'value').set.call(field,value); field.dispatchEvent(new Event('input',{bubbles:true})); } document.querySelector('#garden-form input[type=checkbox]').click();`)
+  await evaluate("document.querySelector('#garden-form button[type=submit]').click()")
+  await settle()
+  assert.equal(await evaluate('document.getElementById("gt").value'), 'Nội dung cần giữ lại', 'Network failure preserves the entered draft')
+  assert.equal(await evaluate('!!document.querySelector("#vuon-hoa [role=alert]")'), true)
+  await evaluate(`window.fetch = () => Promise.resolve(Response.json({saved:true},{status:201})); document.querySelector('#garden-form button[type=submit]').click();`)
+  await settle()
+  assert.equal(await evaluate('document.getElementById("gt").value'), '', 'Confirmed save clears the submitted draft')
+  assert.equal(await evaluate('document.querySelectorAll(".fl").length'), 120, 'Pending submission is not added to the public garden')
+  await evaluate("sessionStorage.removeItem('qa-deed')")
+  await command('Page.removeScriptToEvaluateOnNewDocument', { identifier: fixture.identifier })
   await evaluate("Array.from(document.querySelectorAll('.share-button')).find(button => button.textContent.includes('Mã QR')).click()")
   await settle(); await settle()
   assert.equal(await evaluate("document.querySelector('.qr-card img')?.src.startsWith('data:image/png')"), true)
@@ -130,12 +157,26 @@ try {
   assert.equal((await fetch(base + '/admin/quiz')).status, 200)
   await command('Page.navigate', { url: base + '/thu-vien' }); await settle()
   for (const type of ['Sách', 'Hình ảnh', 'Video', 'Audio', 'Infographic', 'Tài liệu']) {
+    if (type === 'Infographic') {
+      await command('Network.setCacheDisabled', { cacheDisabled: true })
+      await command('Network.setBlockedURLs', { urls: ['*infographics/hanh-trinh-ho-chi-minh.svg*'] })
+    }
     await evaluate(`Array.from(document.querySelectorAll('.library-filter')).find(button=>button.textContent.startsWith(${JSON.stringify(type)})).click()`)
     await settle()
     await evaluate("(document.querySelector('.library-title-button') || document.querySelector('.library-image-button')).click()")
     await settle()
     assert.equal(await evaluate('!!document.querySelector(".library-preview[open]")'), true, `Reader for ${type}`)
     assert.equal(await evaluate('!!document.querySelector(".library-preview[open] a[href]")'), true, `Source for ${type}`)
+    if (type === 'Infographic') {
+      await evaluate("const picture=document.querySelector('.library-media-viewer img'); picture.loading='eager'; picture.scrollIntoView({block:'center'})")
+      await settle()
+      assert.equal(await evaluate('!!document.querySelector(".library-media-error[role=alert]")'), true, 'Failed image shows retry feedback')
+      await command('Network.setBlockedURLs', { urls: [] })
+      await evaluate("document.querySelector('.library-media-error button').click()")
+      assert.equal(await evaluate("document.querySelector('.library-media-viewer img').decode().then(()=>true,()=>false)"), true, 'Image retry loads the real resource')
+      assert.equal(await evaluate('!!document.querySelector(".library-media-error")'), false)
+      await command('Network.setCacheDisabled', { cacheDisabled: false })
+    }
     await evaluate('document.querySelector(".library-preview-bar button").click()'); await settle()
   }
   await command('Emulation.setEmulatedMedia', { features: [] })
@@ -144,6 +185,14 @@ try {
   await settle(); await settle()
   assert.equal(await evaluate("parseFloat(document.querySelector('#prog').style.height) > 0"), true, 'GSAP timeline progress')
   await command('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+  await command('Emulation.setDeviceMetricsOverride', { width: 844, height: 390, deviceScaleFactor: 1, mobile: true })
+  await command('Page.navigate', { url: base }); await settle()
+  await evaluate("document.querySelector('.mobile-menu summary').click()")
+  assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true, 'Landscape layout stays within the viewport')
+  assert.equal(await evaluate("document.querySelector('.mobile-menu nav').getBoundingClientRect().bottom <= innerHeight + 1"), true, 'Landscape menu scrolls within the viewport')
   assert.deepEqual(errors, [])
-  console.log('PASS: '+(process.env.QA_INTERACTIONS_ONLY ? 'critical interactions' : 'eight public routes at seven widths')+', six library formats, mobile menu, keyboard timeline, GSAP, reduced motion, value lotus, accessible dialog, PNG 800x1000, QR 512x512, OG 1200x630, admin routes, sitemap, robots, 404, no runtime exceptions.')
-} finally { socket.close() }
+  console.log('PASS: '+(process.env.QA_INTERACTIONS_ONLY ? 'critical interactions' : 'ten public routes at seven widths')+', garden empty/detail fixtures, six library formats, mobile menu, keyboard timeline, GSAP, reduced motion, value lotus, accessible dialog, PNG 800x1000, QR 512x512, OG 1200x630, admin routes, sitemap, robots, 404, no runtime exceptions.')
+} finally {
+  socket.close()
+  await fetch(`http://127.0.0.1:9223/json/close/${target.id}`).catch(() => {})
+}

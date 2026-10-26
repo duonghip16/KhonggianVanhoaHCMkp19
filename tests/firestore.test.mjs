@@ -29,6 +29,17 @@ const verifiedStory = { status: 'published', title: 'Test fixture', text: 'Local
 before(async () => { env = await initializeTestEnvironment({ projectId: 'demo-kp19', firestore: { rules: await readFile(new URL('../firebase/firestore.rules', import.meta.url), 'utf8') }, storage: { rules: await readFile(new URL('../firebase/storage.rules', import.meta.url), 'utf8') } }) })
 beforeEach(async () => { await env.clearFirestore() })
 after(async () => { await env.cleanup() })
+test('admin publication requires explicit consent even when bypassing the CMS', async () => {
+  const db = env.authenticatedContext('admin-consent', { admin: true }).firestore()
+  for (const col of ['deeds', 'messages']) {
+    for (const status of ['verified', 'published']) {
+      await assertFails(setDoc(doc(db, col, `missing-${status}`), { ...verifiedStory, status }))
+      await assertFails(setDoc(doc(db, col, `refused-${status}`), { ...verifiedStory, status, consent: false }))
+      await assertSucceeds(setDoc(doc(db, col, `accepted-${status}`), { ...verifiedStory, status, consent: true }))
+    }
+  }
+})
+
 test('guests can submit pending content and cannot inject moderation fields', async () => {
   const db = env.unauthenticatedContext().firestore()
   const pending = { text: 'Local test', name: '', consent: true, status: 'pending', createdAt: serverTimestamp() }

@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { contributionWrite, validateContribution } from '@/lib/contributions'
 import { reserveSubmission, submissionKey } from '@/lib/submission-limit'
+import { reportServiceFailure, type ServiceErrorCode } from '@/lib/server-diagnostics'
 
 export const runtime = 'nodejs'
 const limited = (seconds: number) => NextResponse.json({ error: 'Bạn gửi quá nhanh. Vui lòng chờ rồi thử lại.', retryAfter: seconds }, { status: 429, headers: { 'Retry-After': String(seconds), 'Cache-Control': 'no-store' } })
 
 export async function POST(request: Request) {
-  const failure = () => NextResponse.json({ error: 'Chưa gửi được nội dung. Vui lòng thử lại.' }, { status: 503 })
+  const failure = (code: ServiceErrorCode, upstreamStatus?: number) => NextResponse.json({ error: 'Chưa gửi được nội dung. Vui lòng thử lại.', code, requestId: reportServiceFailure(code, upstreamStatus) }, { status: 503, headers: { 'Cache-Control': 'no-store' } })
   const origin = request.headers.get('origin')
   if (origin && origin !== new URL(request.url).origin) return NextResponse.json({ error: 'Yêu cầu không hợp lệ.' }, { status: 403 })
   let data
@@ -28,7 +29,7 @@ export async function POST(request: Request) {
   } catch { return NextResponse.json({ error: 'Nội dung không hợp lệ.' }, { status: 400 }) }
   if (!data) return NextResponse.json({ error: 'Kiểm tra nội dung và đồng ý gửi xét duyệt.' }, { status: 400 })
   const project = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  if (!project) return failure()
+  if (!project) return failure('FIREBASE_NOT_CONFIGURED')
   const wait = reserveSubmission(submissionKey(request))
   if (wait) return limited(wait)
   try {
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     const root = `projects/${project}/databases/(default)/documents`
     const gateName = `${root}/submission_limits/public`
     const gateResponse = await fetch(`https://firestore.googleapis.com/v1/${gateName}`, { cache: 'no-store', signal })
-    if (!gateResponse.ok && gateResponse.status !== 404) return failure()
+    if (!gateResponse.ok && gateResponse.status !== 404) return failure('CONTRIBUTION_GATE_UNAVAILABLE', gateResponse.status)
     const gate = gateResponse.ok ? await gateResponse.json() : null
     if (gate?.fields?.submittedAt?.timestampValue) {
       const remaining = Math.ceil((Date.parse(gate.fields.submittedAt.timestampValue) + 5000 - Date.now()) / 1000)
@@ -61,11 +62,11 @@ export async function POST(request: Request) {
         const current = await latest.json()
         if (current.updateTime && current.updateTime !== gate?.updateTime) return limited(5)
       }
-      return failure()
+      return failure('CONTRIBUTION_WRITE_DENIED', response.status)
     }
-    if (!response.ok) return failure()
+    if (!response.ok) return failure('CONTRIBUTION_WRITE_UNAVAILABLE', response.status)
     const result = await response.json()
-    if (result.error || !Array.isArray(result.writeResults) || result.writeResults.length !== 2) return failure()
+    if (result.error || !Array.isArray(result.writeResults) || result.writeResults.length !== 2) return failure('CONTRIBUTION_INVALID_RESPONSE')
     return NextResponse.json({ saved: true }, { status: 201 })
-  } catch { return failure() }
+  } catch { return failure('CONTRIBUTION_SERVICE_UNAVAILABLE') }
 }
