@@ -27,19 +27,21 @@ export default function Navigation() {
   const close = () => { if (menu.current) menu.current.open = false; if (desktopMenu.current) desktopMenu.current.open = false }
   useEffect(() => { if (menu.current) menu.current.open = false; if (desktopMenu.current) desktopMenu.current.open = false }, [pathname])
   useEffect(() => {
-    const dismiss = (event: PointerEvent) => { for (const element of [menu.current, desktopMenu.current]) if (element && !element.contains(event.target as Node)) element.open = false }
+    // Touch browsers can blur the summary before dispatching a link's click.
+    // Close on an actual outside interaction so the link stays available.
+    const dismiss = (event: Event) => { for (const element of [menu.current, desktopMenu.current]) if (element && !element.contains(event.target as Node)) element.open = false }
     const desktop = matchMedia('(min-width: 1101px)')
     const resize = () => { if (menu.current) menu.current.open = false; if (desktopMenu.current) desktopMenu.current.open = false }
     document.addEventListener('pointerdown', dismiss)
+    document.addEventListener('focusin', dismiss)
     desktop.addEventListener('change', resize)
-    return () => { document.removeEventListener('pointerdown', dismiss); desktop.removeEventListener('change', resize) }
+    return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('focusin', dismiss); desktop.removeEventListener('change', resize) }
   }, [])
   const item = ([href, label]: readonly [string, string], icon = false) => <li key={href}><Link href={href} aria-current={active(href) ? 'page' : undefined} onClick={close}>{icon && <NavIcon href={href} />}<span>{label}</span>{icon && <span className="nav-item-arrow" aria-hidden="true">↗</span>}</Link></li>
   const keyboard = (event: React.KeyboardEvent<HTMLDetailsElement>) => { if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() } }
-  const blur = (event: React.FocusEvent<HTMLDetailsElement>) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) event.currentTarget.open = false }
   return <>
-    <nav className="desktop-nav" aria-label="Chính"><ul>{item(['/', 'Trang chủ'])}{explore.map(link => item(link))}<li><details ref={desktopMenu} className="desktop-community" onKeyDown={keyboard} onBlur={blur}><summary className={community.some(([href]) => active(href)) ? 'is-current' : undefined}>Cộng đồng <span className="nav-chevron" aria-hidden="true">⌄</span></summary><ul>{community.map(link => item(link, true))}</ul></details></li></ul></nav>
-    <details ref={menu} className="mobile-menu" onToggle={event => setOpened(event.currentTarget.open)} onKeyDown={keyboard} onBlur={blur}>
+    <nav className="desktop-nav" aria-label="Chính"><ul>{item(['/', 'Trang chủ'])}{explore.map(link => item(link))}<li><details ref={desktopMenu} className="desktop-community" onKeyDown={keyboard}><summary className={community.some(([href]) => active(href)) ? 'is-current' : undefined}>Cộng đồng <span className="nav-chevron" aria-hidden="true">⌄</span></summary><ul>{community.map(link => item(link, true))}</ul></details></li></ul></nav>
+    <details ref={menu} className="mobile-menu" onToggle={event => setOpened(event.currentTarget.open)} onKeyDown={keyboard}>
       <summary aria-label={opened ? 'Đóng menu điều hướng' : 'Mở menu điều hướng'}><span className="menu-icon" aria-hidden="true" /><span>{opened ? 'Đóng' : 'Menu'}</span></summary>
       <nav aria-label="Chính trên điện thoại"><p className="mobile-menu-heading">Khám phá không gian <span>KP19</span></p><ul className="mobile-home-link">{item(['/', 'Trang chủ'], true)}</ul><div className="mobile-menu-group"><p className="mobile-group-label">Tìm hiểu & khám phá</p><ul>{explore.map(link => item(link, true))}</ul></div><div className="mobile-menu-group"><p className="mobile-group-label">Cộng đồng & sẻ chia</p><ul>{community.map(link => item(link, true))}</ul></div></nav>
     </details>
