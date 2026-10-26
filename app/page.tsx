@@ -44,11 +44,11 @@ export default function Home() {
           <p className="eyebrow">Triển lãm số · Phường Tân Thới Hiệp</p>
           <h1 id="h1"><span className="hero-title-line"><em>Không gian Văn hóa</em></span><span><em>Hồ Chí Minh</em></span><span className="kp"><em> - KP19</em></span></h1>
           <p className="sub">Đi từ tư tưởng đến giá trị, từ giá trị đến những việc làm bình dị của một cộng đồng khu phố.</p>
-          <div className="cta"><a className="btn" href="#gia-tri">Bắt đầu tham quan <i>→</i></a><a className="hero-secondary" href="#khu-pho-19">Khám phá hoạt động KP19 ↗</a></div>
+          <div className="cta"><a className="btn" href="#lo-trinh-tham-quan">Bắt đầu tham quan <i>→</i></a><a className="hero-secondary" href="#khu-pho-19">Khám phá hoạt động KP19 ↗</a></div>
           <a className="scroll" href="#gia-tri" aria-label="Cuộn xuống để khám phá">KHÁM PHÁ<i /></a>
         </section>
 
-        <Suspense fallback={<section className="flow grain" aria-label="Nội dung tham quan đang tải"><p id="gia-tri" role="status">Đang mở nội dung tham quan…</p><p id="khu-pho-19">Hoạt động cộng đồng sẽ xuất hiện khi tải xong.</p></section>}><HomeContent /></Suspense>
+        <Suspense fallback={<section id="lo-trinh-tham-quan" className="flow grain" aria-label="Nội dung tham quan đang tải"><p id="gia-tri" role="status">Đang mở nội dung tham quan…</p><p id="khu-pho-19">Hoạt động cộng đồng sẽ xuất hiện khi tải xong.</p></section>}><HomeContent /></Suspense>
       </main>
       <SiteFooter />
     </>
@@ -62,7 +62,7 @@ async function HomeContent() {
   return <>
         <Effects />
 
-        <section className="flow grain" aria-labelledby="hf">
+        <section id="lo-trinh-tham-quan" className="flow grain" aria-labelledby="hf">
           {unavailable && <ContentServiceNote />}
           <p className="eyebrow">Lộ trình tham quan</p>
           <h2 id="hf">Ánh sáng từ tư tưởng,<br />nở hoa từ hành động.</h2>

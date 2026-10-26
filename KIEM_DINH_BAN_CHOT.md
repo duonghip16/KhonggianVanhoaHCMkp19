@@ -1,5 +1,13 @@
 # Kiểm định theo bản chốt KP19
 
+## Cập nhật nội dung và điều hướng theo góp ý
+
+Quyền riêng tư được viết lại bằng ngôn ngữ dành cho người tham gia, bỏ tên dịch vụ và thuật ngữ kỹ thuật. Giới thiệu dự án và Quyền riêng tư chuyển sang nhóm “Thông tin website” riêng ở footer. Menu điện thoại có 8 trang chính chia theo nhóm, biểu tượng, chỉ dấu trang hiện tại và nút Đóng; desktop có mục Cộng đồng mở danh sách con.
+
+Build, TypeScript, lint và kiểm tra định dạng thay đổi đều đạt. 10 trang tiếp tục không tràn ngang ở 7 độ rộng. Các kiểm tra tương tác đạt, gồm đủ 8 liên kết mobile, nhóm thông tin footer, nội dung quyền riêng tư không chứa các thuật ngữ kỹ thuật đã loại bỏ, menu desktop mở/đóng bằng Escape và menu khi xoay ngang. Ảnh kiểm tra: `.qa/new-menu-320.png`, `.qa/new-menu-390.png`, `.qa/new-menu-768.png`, `.qa/new-menu-1440.png` và `.qa/new-footer-320.png`. Log tương tác: `.qa/navigation-interactions.log`.
+
+Các số đo Lighthouse bên dưới là phép đo ở đợt kiểm định trước cập nhật menu này; chưa đo lại Lighthouse cho giao diện menu mới.
+
 Ngày kiểm tra: 26/10/2026. Phạm vi: source đang mở, bản build production chạy tại `http://localhost:3100`. Giữ kiến trúc Next.js, Firebase, ImageKit và GSAP. Không ghi thử dữ liệu người dân, không sửa Rules cloud, chưa tạo deployment Vercel mới.
 
 ## Các đợt thay đổi

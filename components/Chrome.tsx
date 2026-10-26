@@ -18,7 +18,7 @@ export function SiteFooter() {
   ] as const
   const participate = [
     ['/cau-chuyen', 'Những câu chuyện đẹp'], ['/vuon-hoa-viec-tot', 'Vườn hoa việc tốt'],
-    ['/tuong-tac', 'Tương tác'], ['/gioi-thieu', 'Giới thiệu dự án'], ['/quyen-rieng-tu', 'Quyền riêng tư'],
+    ['/tuong-tac', 'Tương tác'],
   ] as const
   return <footer className="site-footer"><div className="footer-inner">
     <div className="footer-invitation">
@@ -30,6 +30,7 @@ export function SiteFooter() {
       {[{ label: 'Khám phá', links: explore }, { label: 'Cùng tham gia', links: participate }].map(({ label, links }) => <nav className="footer-nav" aria-label={label} key={label}><h3>{label}</h3><ul>{links.map(([href, text]) => <li key={href}><Link href={href}>{text}</Link></li>)}</ul></nav>)}
       <div className="footer-connect"><h3>Kết nối & chia sẻ</h3><p>Chia sẻ không gian này hoặc gửi mã QR để cùng lan tỏa những giá trị đẹp.</p><ShareTools qr /></div>
     </div>
+    <nav className="footer-information" aria-label="Thông tin website"><h3>Thông tin website</h3><ul><li><Link href="/gioi-thieu">Giới thiệu dự án <span aria-hidden="true">↗</span></Link></li><li><Link href="/quyen-rieng-tu">Quyền riêng tư <span aria-hidden="true">↗</span></Link></li></ul></nav>
     <div className="footer-bottom"><span className="footer-copyright">© {new Date().getUTCFullYear()} Khu phố 19<span className="footer-copyright-note"> · {SITE_NAME}</span></span><div className="footer-bottom-links"><a className="footer-back-top" href="#">Về đầu trang <span aria-hidden="true">↑</span></a></div></div>
   </div></footer>
 }
