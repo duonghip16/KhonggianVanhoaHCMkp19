@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import path from 'node:path'
+import { firebaseWebConfig } from './firebase-web-config.mjs'
 
 export function firebaseEnvironment() {
   const env = { ...process.env }
@@ -10,7 +11,7 @@ export function firebaseEnvironment() {
       if (match && env[match[1]] === undefined) env[match[1]] = match[2].replace(/^['"]|['"]$/g, '')
     }
   }
-  return env
+  return { ...env, ...firebaseWebConfig(env) }
 }
 
 export function firebaseProject() {

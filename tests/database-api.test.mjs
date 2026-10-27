@@ -3,6 +3,41 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import ts from 'typescript'
 import nextConfig from '../next.config.mjs'
+import { firebaseWebConfig } from '../scripts/firebase-web-config.mjs'
+
+test('Firebase configuration rejects mixed projects and excludes server secrets', () => {
+  assert.throws(() => firebaseWebConfig({ NEXT_PUBLIC_FIREBASE_PROJECT_ID: 'demo-other' }), /Đổi Firebase project/)
+  const config = firebaseWebConfig({
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: ' demo-other ', NEXT_PUBLIC_FIREBASE_API_KEY: ' other-key ',
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: 'demo-other.firebaseapp.com', NEXT_PUBLIC_FIREBASE_APP_ID: '1:123:web:abc',
+    IMAGEKIT_PRIVATE_KEY: 'must-stay-private', FIREBASE_PRIVATE_KEY: 'must-stay-private',
+  })
+  assert.equal(config.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'demo-other')
+  assert.equal(config.NEXT_PUBLIC_FIREBASE_API_KEY, 'other-key')
+  assert.equal(config.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, '')
+  assert.equal(config.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID, '')
+  assert.ok(Object.keys(config).every(key => key.startsWith('NEXT_PUBLIC_FIREBASE_')))
+  assert.throws(() => firebaseWebConfig({ ...config, NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '456' }), /không cùng project/)
+})
+
+test('Firebase login builds with public Web configuration when deployment env is absent', () => {
+  const keys = ['API_KEY', 'AUTH_DOMAIN', 'PROJECT_ID', 'APP_ID', 'STORAGE_BUCKET', 'MESSAGING_SENDER_ID', 'MEASUREMENT_ID'].map(key => `NEXT_PUBLIC_FIREBASE_${key}`)
+  const previous = Object.fromEntries(keys.map(key => [key, process.env[key]]))
+  try {
+    keys.forEach(key => { delete process.env[key] })
+    const config = nextConfig('phase-production-build').env
+    assert.deepEqual(Object.keys(config).sort(), [...keys].sort())
+    for (const key of keys) assert.ok(config[key], `Missing ${key}`)
+    assert.equal(config.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'khonggianvanhoahcm-c5873')
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY = 'deployment-key'
+    assert.equal(nextConfig('phase-production-build').env.NEXT_PUBLIC_FIREBASE_API_KEY, 'deployment-key')
+  } finally {
+    for (const key of keys) {
+      if (previous[key] === undefined) delete process.env[key]
+      else process.env[key] = previous[key]
+    }
+  }
+})
 
 test('production build retains the Firebase project when hosting has no local env file', () => {
   const previous = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
@@ -10,7 +45,7 @@ test('production build retains the Firebase project when hosting has no local en
     delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     assert.equal(nextConfig('phase-production-build').env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'khonggianvanhoahcm-c5873')
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'demo-override'
-    assert.equal(nextConfig('phase-production-build').env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'demo-override')
+    assert.throws(() => nextConfig('phase-production-build'), /Đổi Firebase project/)
   } finally {
     if (previous === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = previous
@@ -31,6 +66,16 @@ const values = moduleUrl(compile(await readFile(new URL('../lib/firestore-values
 const react = moduleUrl('export const cache = fn => fn')
 const { publishedRecords, loadPublishedCollections } = await import(moduleUrl(compile(await readFile(new URL('../lib/public-content.ts', import.meta.url), 'utf8')).replace("import 'server-only';", '').replace("'react'", JSON.stringify(react)).replace("'./editorial'", JSON.stringify(editorial)).replace("'./firestore-values'", JSON.stringify(values))))
 let requestNumber = 0
+test('missing server configuration is reported as unavailable instead of an empty community', async () => {
+  const previous = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  try {
+    delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    await assert.rejects(publishedRecords('messages'), /Chưa cấu hình/)
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = previous
+  }
+})
 test('community forms use the server configuration and distinguish missing configuration from failures', async () => {
   const originalFetch = globalThis.fetch
   const originalProject = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID

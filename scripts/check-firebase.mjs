@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs'
+import { firebaseWebConfig } from './firebase-web-config.mjs'
 
 // This command performs read-only queries. It never prints keys or credentials.
 const env = { ...process.env }
@@ -8,6 +9,7 @@ if (existsSync('.env.local')) {
     if (match && env[match[1]] === undefined) env[match[1]] = match[2].replace(/^['"]|['"]$/g, '')
   }
 }
+Object.assign(env, firebaseWebConfig(env))
 const required = ['API_KEY', 'AUTH_DOMAIN', 'PROJECT_ID', 'APP_ID']
 const missing = required.filter(key => !env[`NEXT_PUBLIC_FIREBASE_${key}`])
 if (missing.length) {
@@ -15,6 +17,25 @@ if (missing.length) {
   process.exitCode = 1
 } else {
   const project = env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  try {
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects?key=${encodeURIComponent(env.NEXT_PUBLIC_FIREBASE_API_KEY)}`, { signal: AbortSignal.timeout(15000) })
+    const result = await response.json()
+    if (!response.ok || result.error) throw new Error('Auth unavailable')
+    if (String(result.projectId) !== env.NEXT_PUBLIC_FIREBASE_APP_ID.split(':')[1]) throw new Error('Auth project mismatch')
+    if (!result.authorizedDomains?.includes(env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN)) throw new Error('Auth domain mismatch')
+    console.log('Firebase Auth: API key, app ID và auth domain cùng project, kết nối thành công.')
+  } catch {
+    console.error('Firebase Auth chưa sẵn sàng. Kiểm tra API key, app ID, auth domain và giới hạn API key.')
+    process.exitCode = 1
+  }
+  try {
+    const response = await fetch(`https://firestore.googleapis.com/v1/projects/${encodeURIComponent(project)}/databases/(default)/documents/submission_limits/public`, { signal: AbortSignal.timeout(15000) })
+    if (!response.ok && response.status !== 404) throw new Error('Gate unavailable')
+    console.log('Bộ đếm gửi bài: đọc được theo public Rules.')
+  } catch {
+    console.error('Chưa đọc được bộ đếm gửi bài. Kiểm tra Rules submission_limits/public.')
+    process.exitCode = 1
+  }
   console.log(`Kiểm tra Firestore project: ${project}`)
   for (const collection of ['library', 'stories', 'activities', 'media', 'site_stats', 'quiz_questions', 'daily_challenges', 'deeds', 'messages']) {
     try {

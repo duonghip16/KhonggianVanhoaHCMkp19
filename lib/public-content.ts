@@ -5,7 +5,8 @@ import { decodeFirestoreFields, type FirestoreValue } from './firestore-values'
 // Unauthenticated requests keep server rendering subject to public read rules.
 export const publishedRecords = cache(async (col: ManagedCollection): Promise<EditorialRecord[]> => {
   const project = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
-  if (!project || !COLLECTIONS.includes(col)) return []
+  if (!COLLECTIONS.includes(col)) return []
+  if (!project) throw new Error('Chưa cấu hình kết nối nội dung.')
   try {
     const response = await fetch(`https://firestore.googleapis.com/v1/projects/${encodeURIComponent(project)}/databases/(default)/documents:runQuery`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store', signal: AbortSignal.timeout(8000),
