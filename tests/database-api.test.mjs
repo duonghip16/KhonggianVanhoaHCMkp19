@@ -2,6 +2,20 @@ import { readFile } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import ts from 'typescript'
+import nextConfig from '../next.config.mjs'
+
+test('production build retains the Firebase project when hosting has no local env file', () => {
+  const previous = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+  try {
+    delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    assert.equal(nextConfig('phase-production-build').env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'khonggianvanhoahcm-c5873')
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = 'demo-override'
+    assert.equal(nextConfig('phase-production-build').env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, 'demo-override')
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    else process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID = previous
+  }
+})
 const compile = source => ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.ESNext } }).outputText
 const moduleUrl = source => `data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
 const editorial = moduleUrl(compile(await readFile(new URL('../lib/editorial.ts', import.meta.url), 'utf8')))

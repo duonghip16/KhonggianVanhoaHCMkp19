@@ -49,6 +49,8 @@ npm audit
 
 Project nằm trong `.firebaserc`; Rules trong `firebase/`. Kiểm tra project trước khi dùng seed, setup hoặc deploy. `npm run firebase:check` chỉ đọc. Script setup/seed có thể thay đổi cloud, chỉ chạy khi chủ động chọn đúng dự án và mục đích.
 
+Build dùng project mặc định trong `.firebaserc` nếu hosting chưa đặt `NEXT_PUBLIC_FIREBASE_PROJECT_ID`; biến môi trường được ưu tiên khi có cấu hình. Sau khi sửa cấu hình phải build và triển khai lại trên Vercel. Các biến Firebase Web còn lại vẫn cần cho đăng nhập quản trị; không đưa khóa server vào cấu hình public.
+
 API giới hạn 1 lần/phút, tối đa 5 lần/15 phút theo khóa IP trong bộ nhớ. Trên Vercel (`VERCEL=1`), mặc định dùng `x-vercel-forwarded-for`; header này không được tin ở môi trường khác chỉ vì client tự gửi nó. Chỉ ghi đè `CONTRIBUTION_IP_HEADER` khi hosting ghi đè và xác thực header đó. Ngoài Vercel nếu chưa cấu hình thì khách chưa nhận diện chia sẻ cùng hạn mức. Lớp IP không chia sẻ giữa các instance; Firestore duy trì hạn mức chung 1 bài/5 giây bằng commit nguyên tử của bài và `submission_limits/public`.
 
 Cập nhật API và Rules tương ứng trong cùng đợt: API cũ không tạo bộ đếm, Rules cũ không hỗ trợ bộ đếm. Push Git không tự cập nhật Rules cloud. Lệnh: `npm run firebase:deploy:firestore`.
